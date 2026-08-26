@@ -9,5 +9,6 @@ router.use(authenticate);
 router.get('/', RoadmapController.getActiveRoadmap);
 router.post('/generate', RoadmapController.generateRoadmap);
 router.post('/recalculate', RoadmapController.recalculateRoadmap);
+router.post('/rebuild-streak-backlog', RoadmapController.rebuildStreakBacklog);
 
 export default router;

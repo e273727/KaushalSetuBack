@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
+    "@supabase/supabase-js": "^2.112.4",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -30,6 +31,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.4",
     "prisma": "^6.4.1",
+    "supabase": "^2.115.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3"
