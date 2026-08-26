@@ -16,6 +16,11 @@ export class CourseController {
 
       const formatted = courses.map((c) => ({
         ...c,
+        courseUrl: c.title.toLowerCase().includes('python') || c.externalCourseId === 'IGOT-PY-201'
+          ? 'https://portal.igotkarmayogi.gov.in/public/toc/do_1137349858229288961285/overview'
+          : c.title.toLowerCase().includes('bard') || c.title.toLowerCase().includes('chatgpt') || c.externalCourseId === 'IGOT-AI-401'
+          ? 'https://portal.igotkarmayogi.gov.in/public/toc/do_113923174474121216195/overview'
+          : c.courseUrl,
         competencies: c.courseCompetencies
           ? c.courseCompetencies.map((cc) => cc.competency?.name || 'General').filter(Boolean)
           : ['General Analytics'],
@@ -43,7 +48,16 @@ export class CourseController {
         return ApiResponse.error(res, 'Course not found', 404);
       }
 
-      return ApiResponse.success(res, course, 'Course details fetched');
+      const formatted = {
+        ...course,
+        courseUrl: course.title.toLowerCase().includes('python') || course.externalCourseId === 'IGOT-PY-201'
+          ? 'https://portal.igotkarmayogi.gov.in/public/toc/do_1137349858229288961285/overview'
+          : course.title.toLowerCase().includes('bard') || course.title.toLowerCase().includes('chatgpt') || course.externalCourseId === 'IGOT-AI-401'
+          ? 'https://portal.igotkarmayogi.gov.in/public/toc/do_113923174474121216195/overview'
+          : course.courseUrl,
+      };
+
+      return ApiResponse.success(res, formatted, 'Course details fetched');
     } catch (error) {
       next(error);
     }
