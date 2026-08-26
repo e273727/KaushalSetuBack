@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  learner
+  admin
+  trainer
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(learner)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  profile            Profile?
+  certificates       Certificate[]
+  userCompetencies   UserCompetency[]
+  assessments        Assessment[]
+  roadmaps           Roadmap[]
+  learningActivities LearningActivity[]
+  streak             Streak?
+  documents          Document[]
+
+  @@map("users")
+}
+
+model Profile {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  fullName              String   @map("full_name")
+  age                   Int?
+  department            String?
+  currentJobRole        String?  @map("current_job_role")
+  currentAssignment     String?  @map("current_assignment")
+  yearsOfExperience     Float?   @map("years_of_experience")
+  highestQualification String?  @map("highest_qualification")
+  fieldOfStudy          String?  @map("field_of_study")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Certificate {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  certificateName     String    @map("certificate_name")
+  issuingOrganization String?   @map("issuing_organization")
+  issueDate           DateTime? @map("issue_date") @db.Date
+  expiryDate          DateTime? @map("expiry_date") @db.Date
+  certificateUrl      String?   @map("certificate_url")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("certificates")
+}
+
+model JobRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  jobRoleCompetencies JobRoleCompetency[]
+
+  @@map("job_roles")
+}
+
+model Competency {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  domain      String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  jobRoleCompetencies JobRoleCompetency[]
+  userCompetencies    UserCompetency[]
+  questions           Question[]
+  courseCompetencies  CourseCompetency[]
+  roadmapItems        RoadmapItem[]
+
+  @@map("competencies")
+}
+
+model JobRoleCompetency {
+  id            String @id @default(uuid()) @db.Uuid
+  jobRoleId     String @map("job_role_id") @db.Uuid
+  competencyId  String @map("competency_id") @db.Uuid
+  requiredLevel Int    @map("required_level")
+
+  jobRole    JobRole    @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@unique([jobRoleId, competencyId])
+  @@map("job_role_competencies")
+}
+
+model UserCompetency {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  competencyId   String    @map("competency_id") @db.Uuid
+  currentLevel   Int       @default(0) @map("current_level")
+  score          Float     @default(0)
+  lastAssessedAt DateTime? @map("last_assessed_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, competencyId])
+  @@map("user_competencies")
+}
+
+model Assessment {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  assessmentType String    @map("assessment_type")
+  totalQuestions Int?      @map("total_questions")
+  score          Float?
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  status         String    @default("started")
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers AssessmentAnswer[]
+
+  @@map("assessments")
+}
+
+model Question {
+  id               String   @id @default(uuid()) @db.Uuid
+  competencyId     String?  @map("competency_id") @db.Uuid
+  questionText     String   @map("question_text")
+  difficulty       Int
+  questionType     String   @default("mcq") @map("question_type")
+  explanation      String?
+  sourceDocumentId String?  @map("source_document_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  competency        Competency?        @relation(fields: [competencyId], references: [id], onDelete: SetNull)
+  sourceDocument    Document?          @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  options           QuestionOption[]
+  assessmentAnswers AssessmentAnswer[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid()) @db.Uuid
+  questionId String  @map("question_id") @db.Uuid
+  optionText String  @map("option_text")
+  isCorrect  Boolean @default(false) @map("is_correct")
+
+  question          Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  assessmentAnswers AssessmentAnswer[]
+
+  @@map("question_options")
+}
+
+model AssessmentAnswer {
+  id               String   @id @default(uuid()) @db.Uuid
+  assessmentId     String   @map("assessment_id") @db.Uuid
+  questionId       String   @map("question_id") @db.Uuid
+  selectedOptionId String?  @map("selected_option_id") @db.Uuid
+  isCorrect        Boolean? @map("is_correct")
+  answeredAt       DateTime @default(now()) @map("answered_at")
+
+  assessment     Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@map("assessment_answers")
+}
+
+model Course {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  provider        String?
+  source          String?
+  externalCourseId String? @map("external_course_id")
+  level           Int?
+  durationMinutes Int?     @map("duration_minutes")
+  courseUrl       String?  @map("course_url")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  courseCompetencies CourseCompetency[]
+  roadmapItems       RoadmapItem[]
+
+  @@map("courses")
+}
+
+model CourseCompetency {
+  id           String @id @default(uuid()) @db.Uuid
+  courseId     String @map("course_id") @db.Uuid
+  competencyId String @map("competency_id") @db.Uuid
+
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, competencyId])
+  @@map("course_competencies")
+}
+
+model Roadmap {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  version     Int      @default(1)
+  status      String   @default("active")
+  generatedAt DateTime @default(now()) @map("generated_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items RoadmapItem[]
+
+  @@map("roadmaps")
+}
+
+model RoadmapItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  roadmapId     String    @map("roadmap_id") @db.Uuid
+  courseId      String?   @map("course_id") @db.Uuid
+  competencyId  String?   @map("competency_id") @db.Uuid
+  scheduledDate DateTime? @map("scheduled_date") @db.Date
+  priority      Int       @default(1)
+  status        String    @default("pending")
+  completedAt   DateTime? @map("completed_at")
+
+  roadmap            Roadmap            @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  course             Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  competency         Competency?        @relation(fields: [competencyId], references: [id], onDelete: SetNull)
+  learningActivities LearningActivity[]
+
+  @@map("roadmap_items")
+}
+
+model LearningActivity {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  roadmapItemId   String?   @map("roadmap_item_id") @db.Uuid
+  activityType    String    @map("activity_type")
+  startedAt       DateTime? @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  durationMinutes Int       @default(0) @map("duration_minutes")
+  score           Float?
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapItem RoadmapItem? @relation(fields: [roadmapItemId], references: [id], onDelete: SetNull)
+
+  @@map("learning_activities")
+}
+
+model Streak {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @unique @map("user_id") @db.Uuid
+  currentStreak    Int       @default(0) @map("current_streak")
+  longestStreak    Int       @default(0) @map("longest_streak")
+  lastActivityDate DateTime? @map("last_activity_date") @db.Date
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
+}
+
+model Document {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String?  @map("user_id") @db.Uuid
+  title            String
+  fileUrl          String   @map("file_url")
+  fileType         String?  @map("file_type")
+  processingStatus String   @default("pending") @map("processing_status")
+  uploadedAt       DateTime @default(now()) @map("uploaded_at")
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  questions Question[]
+
+  @@map("documents")
+}
