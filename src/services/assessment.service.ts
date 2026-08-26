@@ -153,4 +153,26 @@ export class AssessmentService {
       },
     });
   }
+
+  static async recordAssessmentSubmission(userId: string, data: {
+    assessmentType?: string;
+    totalQuestions: number;
+    correctCount: number;
+    scorePercentage: number;
+    targetRole?: string;
+  }) {
+    const assessment = await prisma.assessment.create({
+      data: {
+        userId,
+        assessmentType: data.assessmentType || 'diagnostic',
+        totalQuestions: data.totalQuestions || 10,
+        score: data.scorePercentage || 0,
+        startedAt: new Date(),
+        completedAt: new Date(),
+        status: 'completed',
+      },
+    });
+
+    return assessment;
+  }
 }

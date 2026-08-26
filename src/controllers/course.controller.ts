@@ -13,7 +13,15 @@ export class CourseController {
           },
         },
       });
-      return ApiResponse.success(res, courses, 'Courses fetched successfully');
+
+      const formatted = courses.map((c) => ({
+        ...c,
+        competencies: c.courseCompetencies
+          ? c.courseCompetencies.map((cc) => cc.competency?.name || 'General').filter(Boolean)
+          : ['General Analytics'],
+      }));
+
+      return ApiResponse.success(res, formatted, 'Courses fetched successfully');
     } catch (error) {
       next(error);
     }

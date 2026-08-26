@@ -273,7 +273,17 @@ export class AuthService {
 
       if (user) {
         const { passwordHash: _, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        const prof = user.profile;
+        return {
+          ...userWithoutPassword,
+          fullName: prof?.fullName || user.email.split('@')[0],
+          department: prof?.department || 'National Sample Survey Office (NSSO)',
+          currentJobRole: prof?.currentJobRole || 'Statistical Officer',
+          yearsOfExperience: prof?.yearsOfExperience || 3,
+          highestQualification: prof?.highestQualification || "Master's",
+          fieldOfStudy: prof?.fieldOfStudy || 'Mathematical Statistics',
+          age: prof?.age || 30,
+        };
       }
     } catch (dbErr) {
       // Proceed to in-memory check
@@ -283,7 +293,17 @@ export class AuthService {
     for (const memUser of inMemoryUsers.values()) {
       if (memUser.id === userId) {
         const { passwordHash: _, ...userWithoutPassword } = memUser;
-        return userWithoutPassword;
+        const prof = memUser.profile;
+        return {
+          ...userWithoutPassword,
+          fullName: prof?.fullName || memUser.email.split('@')[0],
+          department: prof?.department || 'National Sample Survey Office (NSSO)',
+          currentJobRole: prof?.currentJobRole || 'Statistical Officer',
+          yearsOfExperience: 3,
+          highestQualification: "Master's",
+          fieldOfStudy: 'Mathematical Statistics',
+          age: 30,
+        };
       }
     }
 

@@ -60,4 +60,14 @@ export class AssessmentController {
       next(error);
     }
   }
+
+  static async submitAssessment(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId!;
+      const result = await AssessmentService.recordAssessmentSubmission(userId, req.body);
+      return ApiResponse.success(res, result, 'Assessment score persisted to database', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

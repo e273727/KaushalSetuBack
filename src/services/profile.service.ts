@@ -1,25 +1,59 @@
 import prisma from '../config/prisma';
 
 export class ProfileService {
-  static async updateProfile(userId: string, data: {
-    fullName?: string;
-    age?: number;
-    department?: string;
-    currentJobRole?: string;
-    currentAssignment?: string;
-    yearsOfExperience?: number;
-    highestQualification?: string;
-    fieldOfStudy?: string;
-  }) {
+  static async updateProfile(userId: string, data: any) {
+    const {
+      fullName,
+      age,
+      department,
+      currentJobRole,
+      targetCareerRole,
+      currentAssignment,
+      yearsOfExperience,
+      highestQualification,
+      fieldOfStudy,
+    } = data;
+
+    const profileData = {
+      fullName: fullName || 'User Profile',
+      age: age ? Number(age) : undefined,
+      department,
+      currentJobRole: currentJobRole || targetCareerRole,
+      currentAssignment,
+      yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
+      highestQualification,
+      fieldOfStudy,
+    };
+
+    // Remove undefined properties
+    Object.keys(profileData).forEach(
+      (key) => (profileData as any)[key] === undefined && delete (profileData as any)[key]
+    );
+
     const updatedProfile = await prisma.profile.upsert({
       where: { userId },
-      update: data,
+      update: profileData,
       create: {
         userId,
-        fullName: data.fullName || 'User Profile',
-        ...data,
+        ...profileData,
       },
     });
+
+    if (data.certificates && Array.isArray(data.certificates)) {
+      for (const cert of data.certificates) {
+        if (cert.name) {
+          try {
+            await prisma.certificate.create({
+              data: {
+                userId,
+                certificateName: cert.name,
+                issuingOrganization: cert.provider || 'Government Training Institute',
+              },
+            });
+          } catch {}
+        }
+      }
+    }
 
     return updatedProfile;
   }
