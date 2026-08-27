@@ -128,9 +128,9 @@ export class DocumentController {
    */
   static async deleteDocument(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const docId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       await prisma.document.delete({
-        where: { id },
+        where: { id: docId },
       });
       return ApiResponse.success(res, null, 'Document deleted successfully');
     } catch (error) {
