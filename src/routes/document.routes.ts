@@ -8,5 +8,7 @@ router.use(authenticate);
 
 router.post('/', DocumentController.uploadDocument);
 router.get('/', DocumentController.getDocuments);
+router.post('/chat', DocumentController.chatWithVectorContext);
+router.delete('/:id', DocumentController.deleteDocument);
 
 export default router;
