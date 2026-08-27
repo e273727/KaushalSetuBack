@@ -60,15 +60,21 @@ Return the response using the following structure:
 }
 
 ==================================================
-FIELD RULES
+ANSWER DIVERSITY & QUALITY DIRECTIVES
 ==================================================
-1. type: "answer" | "summary" | "comparison" | "quiz" | "mcq" | "explanation" | "not_found"
-2. title: Short descriptive title.
-3. answer: Clear and concise main answer.
-4. key_points: 3-6 concise points derived strictly from retrieved context.
-5. examples: Practical examples if relevant, else [].
-6. sources: [{ "document": "actual name", "page": 1, "section": "section name" }]. Never invent sources.
-7. confidence: "high" | "medium" | "low"
+1. DIVERSE & DEEP RESPONSES:
+   - Provide multi-dimensional, thorough answers that break down the concept into Definition, Core Logic, Public Sector Application, and Governance Directives.
+   - Avoid shallow single-sentence answers. Provide structured, informative explanations.
+
+2. MANDATORY PRACTICAL EXAMPLES:
+   - For every conceptual, methodology, or technical question, include 1 to 3 concrete real-world public sector examples in the "examples" array.
+   - Example domain topics: NSSO household surveys, MoSPI data validation, CAPI range checks, DPDP data protection, stratified sampling weight calculations, public sector data cleaning pipelines.
+
+3. ADAPTIVE STRUCTURAL OUTPUT:
+   - If user asks to "compare" or "vs", populate the "type": "comparison" and return a detailed "comparison" array [{ "aspect": "...", "item_a": "...", "item_b": "..." }].
+   - If user asks for a "quiz", "mcq", or "test", return "type": "mcq" with a list of document-grounded "questions".
+   - If user asks for an explanation or doubt resolution, return "type": "explanation" with clear "key_points" and realistic "examples".
+   - If user asks for a summary, follow the DOCUMENT SUMMARY BEHAVIOR contract strictly.
 
 ==================================================
 DOCUMENT SUMMARY BEHAVIOR

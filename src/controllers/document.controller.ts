@@ -101,11 +101,11 @@ export class DocumentController {
         });
       });
 
-      // Execute Top-K Semantic Vector Search
+      // Execute Top-K Semantic Vector Search (Richer Context Window: Top 7 Chunks)
       const topKResults = VectorEmbeddingService.retrieveTopKChunks({
         query,
         chunks: chunksForSearch,
-        topK: 5,
+        topK: 7,
       });
 
       const retrievedContextText = topKResults.map((c) => `[Source: ${c.documentName}, Page ${c.pageNumber}, Section: ${c.section}]\n${c.content}`).join('\n\n');
